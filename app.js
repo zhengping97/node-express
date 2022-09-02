@@ -1,60 +1,36 @@
-const http = require('http')
-const { readFileSync } = require('fs');
+const express = require('express')
+const app = express()
+const { products } = require('./data');
 
-// get all files
-const homePage = readFileSync('./navbar-app/index.html')
-const homeStyles = readFileSync('./navbar-app/styles.css')
-const homeImage = readFileSync('./navbar-app/logo.svg')
-const homeLogic = readFileSync('./navbar-app/browser-app.js')
-
-const server = http.createServer((req, res) => {
-    // console.log(req.method)
-    // console.log(req.url)
-    const url = req.url;
-    //homepage
-    if (url === '/') {
-        res.writeHead(200, { 'content-type': 'text/html' })
-        res.write(homePage)
-        res.end()
-    }
-    //about page
-    else if (url === '/about') {
-        res.writeHead(200, { 'content-type': 'text/html' })
-        res.write('<h1>about page</h1>')
-        res.end()
-    }
-    //styles
-    else if (url === '/styles.css') {
-        res.writeHead(200, { 'content-type': 'text/css' })
-        res.write(homeStyles)
-        res.end()
-    }
-    //image/logo
-    else if (url === '/logo.svg') {
-        res.writeHead(200, { 'content-type': 'image/svg+xml' })
-        res.write(homeImage)
-        res.end()
-    }
-    //logic
-    else if (url === '/browser-app.js') {
-        res.writeHead(200, { 'content-type': 'text/javascript' })
-        res.write(homeLogic)
-        res.end()
-    }
-    //error
-    else {
-        res.writeHead(404, { 'content-type': 'text/html' })
-        res.write('<h1>page not found</h1>')
-        res.end()
-    }
+app.get('/', (req, res) => {
+    res.send('<h1>Home Page</h1><a href="/api/products">products</a>')
 })
 
-server.listen(5000) // http://localhost:5000/
+app.get('/api/products', (req, res) => {
+    const newProducts = products.map((product) => {
+        const { id, name, image } = product;
+        return { id, name, image }
+    })
+    res.json(newProducts) // See documentation: https://expressjs.com/en/api.html#res.json
+})
 
-// Informational responses (100-199)
-// Successful responses (200-299)
-// Redirects (300-399)
-// Client errors (400-499)
-// Server errors (500-599)
+//With params
+app.get('/api/products/:productID', (req, res) => {
+    const { productID } = req.params;
+    const singleProduct = products.find((product) => product.id === Number(productID))
 
-//MIME type: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+    if (!singleProduct) {
+        return res.status(404).send('Product Does Not Exist')
+    }
+
+    res.json(singleProduct)
+})
+
+app.get('/api/products/:productID/reviews/:reviewID', (req, res) => {
+    console.log(req.params)
+})
+
+
+app.listen(5000, () => {
+    console.log('Server is listening on port 5000....')
+})
